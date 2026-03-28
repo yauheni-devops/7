@@ -1,0 +1,34 @@
+name: CD
+on:
+  push:
+    branches: [main] # Запуск только при пуше в main (после merge)
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Нужно для сборки под разные процессоры (M1/M2/Intel)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm64
+          # Замени 'yauheni-devops' на свой логин Docker Hub, если он другой
+          tags: |
+            yauheni-devops/my-app:latest
+            yauheni-devops/my-app:${{ github.sha }}
